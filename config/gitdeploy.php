@@ -90,7 +90,18 @@ return [
     */
 
     'projects' => [
-        'self' => [
+        'self' => [ //this is the default and should not be removed it refers to this code base
+            /*
+            |--------------------------------------------------------------------------
+            | Repository name
+            |--------------------------------------------------------------------------
+            |
+            | This is the name of the Git repository that will be pulled. If this
+            | is left empty the script will try to determine the name itself.
+            |
+            */
+
+            'repo_name' => '',            
             /*
             |--------------------------------------------------------------------------
             | Repository path
@@ -210,6 +221,7 @@ return [
         /*
         'project1' => [
 
+            'repo_name' => '',
             'repo_path' => '',
             'remote' => 'origin',
             'maintenance_mode' => true,
