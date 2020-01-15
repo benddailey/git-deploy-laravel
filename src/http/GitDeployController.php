@@ -66,10 +66,27 @@ class GitDeployController extends Controller
             ], 422);
         }
 
+        // Get branch this webhook is for if push event
+        if (isset($postdata['ref'])) {
+            $pushed_branch = explode('/', $postdata['ref']);
+            $pushed_branch = trim($pushed_branch[2]);
+            // Get branch this webhook is for if pull request
+        } elseif (isset($postdata['base']['ref'])) {
+            $pushed_branch = explode('/', $postdata['base']['ref']);
+            $pushed_branch = trim($pushed_branch[2]);
+            // Get branch fails
+        } else {
+            $log->addWarning('Could not determine refs for action');
+            return Response::json([
+                'success' => false,
+                'message' => 'Could not determine refs for action',
+            ], 422);
+        }
+
         $config_base='gitdeploy.projects.self.';
 
         foreach(config('gitdeploy.projects') as $key => $project){
-            if($project['repo_name'] == $pushed_repo_name){
+            if($project['repo_name'] == $pushed_repo_name && $project['branch'] == $pushed_branch){
                 $config_base='gitdeploy.projects.' . $key . '.';
                 break;
             }
@@ -124,12 +141,22 @@ class GitDeployController extends Controller
             $repo_name = trim(exec($cmd));
         }
 
-        // If the refs don't matchthis branch, then no need to do a git pull
+        // Get current branch this repository is on
+        $branch = config($config_base . 'branch');
+        if (empty($branch)){
+            $cmd = escapeshellcmd($git_path)
+                . ' --git-dir=' . escapeshellarg($repo_path . '/.git')
+                . ' --work-tree=' . escapeshellarg($repo_path)
+                . ' rev-parse --abbrev-ref HEAD';
+            $branch = trim(exec($cmd)); //Alternatively shell_exec
+        }
+
+        // If the repo name doesn't match this repo, then no need to do a git pull
         if ($repo_name !== $pushed_repo_name) {
-            $log->addWarning('Pushed name do not match current repo name');
+            $log->addWarning('Pushed name does not match current repo name');
             return Response::json([
                 'success' => false,
-                'message' => 'Pushed name do not match current repo name',
+                'message' => 'Pushed name does not match current repo name',
             ], 422);
         }
 
@@ -200,32 +227,8 @@ class GitDeployController extends Controller
             // If we get this far then the secret matched, lets go ahead!
         }
 
-        // Get current branch this repository is on
-        $cmd = escapeshellcmd($git_path)
-            . ' --git-dir=' . escapeshellarg($repo_path . '/.git')
-            . ' --work-tree=' . escapeshellarg($repo_path)
-            . ' rev-parse --abbrev-ref HEAD';
-        $current_branch = trim(exec($cmd)); //Alternatively shell_exec
-
-        // Get branch this webhook is for if push event
-        if (isset($postdata['ref'])) {
-            $pushed_branch = explode('/', $postdata['ref']);
-            $pushed_branch = trim($pushed_branch[2]);
-            // Get branch this webhook is for if pull request
-        } elseif (isset($postdata['base']['ref'])) {
-            $pushed_branch = explode('/', $postdata['base']['ref']);
-            $pushed_branch = trim($pushed_branch[2]);
-            // Get branch fails
-        } else {
-            $log->addWarning('Could not determine refs for action');
-            return Response::json([
-                'success' => false,
-                'message' => 'Could not determine refs for action',
-            ], 422);
-        }
-
         // If the refs don't matchthis branch, then no need to do a git pull
-        if ($current_branch !== $pushed_branch) {
+        if ($branch !== $pushed_branch) {
             $log->addWarning('Pushed refs do not match current branch');
             return Response::json([
                 'success' => false,
@@ -267,7 +270,7 @@ class GitDeployController extends Controller
                 . ' --work-tree=' . escapeshellarg($repo_path)
                 . ' pull ' . escapeshellarg($git_remote)
                 . ' '
-                . escapeshellarg($current_branch);
+                . escapeshellarg($branch);
 
         exec($cmd, $output, $returnCode);
 
