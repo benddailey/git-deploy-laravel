@@ -44,21 +44,6 @@ return [
     'email_template' => 'gitdeploy::email',
     /*
     |--------------------------------------------------------------------------
-    | Repository path
-    |--------------------------------------------------------------------------
-    |
-    | This the root path of the Git repository that will be pulled. If this
-    | is left empty the script will try to determine the directory itself
-    | but looking for the project's .env file it's nearby .git directory.
-    |
-    | No trailing slash
-    |
-    */
-
-    'repo_path' => '',
-
-    /*
-    |--------------------------------------------------------------------------
     | Allowed sources
     |--------------------------------------------------------------------------
     |
@@ -83,17 +68,6 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Remote name
-    |--------------------------------------------------------------------------
-    |
-    | The name of the remote repository to pull the changes from
-    |
-    */
-
-    'remote' => 'origin',
-
-    /*
-    |--------------------------------------------------------------------------
     | Git binary path
     |--------------------------------------------------------------------------
     |
@@ -107,89 +81,146 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Maintenance mode
+    | Projects
     |--------------------------------------------------------------------------
     |
-    | Allow the git hook to put the site into maintenance mode before doing
-    | the pull from the remote server.
-    |
-    | After a successful pull the site will be switched back to normal
-    | operations. This does leave a possibility of the site remaining in
-    | maintenance mode should an error occur during the pull.
+    | An array of projects to build and deploy
+    | Default is 'self' and if most options left blank it will auto detect values
     |
     */
 
-    'maintenance_mode' => true,
+    'projects' => [
+        'self' => [
+            /*
+            |--------------------------------------------------------------------------
+            | Repository path
+            |--------------------------------------------------------------------------
+            |
+            | This the root path of the Git repository that will be pulled. If this
+            | is left empty the script will try to determine the directory itself
+            | but looking for the project's .env file it's nearby .git directory.
+            |
+            | No trailing slash
+            |
+            */
 
-    /*
-    |--------------------------------------------------------------------------
-    | Fire Event
-    |--------------------------------------------------------------------------
-    |
-    | Allow the git hook to fire a event "GitDeployed" so that everybody can listen to that event.
-    | See readme how to create a nice listener on that.
-    |
-    */
-    'fire_event' => true,
+            'repo_path' => '',
 
-    /*
-    |--------------------------------------------------------------------------
-    | Secret signature
-    |--------------------------------------------------------------------------
-    |
-    | Allow webhook requests to be signed with a secret signature.
-    |
-    | If 'secret' is set to true, Gitdeploy will deny requests where the
-    | signature does not match. If set to false it will ignore any signature
-    | headers it recieves.
-    |
-    | For Gitlab servers, you probably want the settings below:
-    |
-    |     'secret_type' => 'plain',
-    |     'secret_header' => 'X-Gitlab-Token',
-    |
-    | For Github, use something like the below (untested):
-    |
-    |    'secret_type' => 'hmac',
-    |    'secret_header' => 'X-Hub-Signature',
-    */
+            /*
+            |--------------------------------------------------------------------------
+            | Remote name
+            |--------------------------------------------------------------------------
+            |
+            | The name of the remote repository to pull the changes from
+            |
+            */
 
-    'secret' => false,
+            'remote' => 'origin',
 
-    /**
-     * plain|hmac
-     */
-    'secret_type' => 'plain',
+            /*
+            |--------------------------------------------------------------------------
+            | Maintenance mode
+            |--------------------------------------------------------------------------
+            |
+            | Allow the git hook to put the site into maintenance mode before doing
+            | the pull from the remote server.
+            |
+            | After a successful pull the site will be switched back to normal
+            | operations. This does leave a possibility of the site remaining in
+            | maintenance mode should an error occur during the pull.
+            |
+            */
 
-    /**
-     * X-Gitlab-Token|X-Hub-Signature
-     */
-    'secret_header' => 'X-Gitlab-Token',
+            'maintenance_mode' => true,
 
-    /**
-     * The key you specified in the pushing client
-     */
-    'secret_key' => '',
+            /*
+            |--------------------------------------------------------------------------
+            | Fire Event
+            |--------------------------------------------------------------------------
+            |
+            | Allow the git hook to fire a event "GitDeployed" so that everybody can listen to that event.
+            | See readme how to create a nice listener on that.
+            |
+            */
+            'fire_event' => true,
 
-    /*
-    |--------------------------------------------------------------------------
-    | Post Pull Commands
-    |--------------------------------------------------------------------------
-    |
-    | Array of commands to complete after the pull.
-    | All commands will be run from the repo path
-    |
-    | 'commands' => [
-    |     'composer install --no-dev --optimize-autoloader',
-    |     'php artisan migrate --force',
-    |     'npm install --production',
-    |     'npm run production',
-    |     'php artisan config:cache',
-    |     'php artisan route:cache',
-    |     'php artisan view:cache',
-    | ]
-    */
+            /*
+            |--------------------------------------------------------------------------
+            | Secret signature
+            |--------------------------------------------------------------------------
+            |
+            | Allow webhook requests to be signed with a secret signature.
+            |
+            | If 'secret' is set to true, Gitdeploy will deny requests where the
+            | signature does not match. If set to false it will ignore any signature
+            | headers it recieves.
+            |
+            | For Gitlab servers, you probably want the settings below:
+            |
+            |     'secret_type' => 'plain',
+            |     'secret_header' => 'X-Gitlab-Token',
+            |
+            | For Github, use something like the below (untested):
+            |
+            |    'secret_type' => 'hmac',
+            |    'secret_header' => 'X-Hub-Signature',
+            */
 
-    'commands' => [
-    ],
+            'secret' => false,
+
+            /**
+             * plain|hmac
+             */
+            'secret_type' => 'plain',
+
+            /**
+             * X-Gitlab-Token|X-Hub-Signature
+             */
+            'secret_header' => 'X-Gitlab-Token',
+
+            /**
+             * The key you specified in the pushing client
+             */
+            'secret_key' => '',
+
+            /*
+            |--------------------------------------------------------------------------
+            | Post Pull Commands
+            |--------------------------------------------------------------------------
+            |
+            | Array of commands to complete after the pull.
+            | All commands will be run from the repo path
+            |
+            | 'commands' => [
+            |     'composer install --no-interaction --no-dev --optimize-autoloader',
+            |     'npm install --production',
+            |     'npm run production',
+            |     'php artisan optimize',
+            |     'php artisan config:cache',
+            |     'php artisan route:cache',
+            |     'php artisan view:cache',
+            |     'php artisan migrate --force',
+            | ]
+            */
+
+            'commands' => [
+            ],
+
+        ],
+        /*
+        'project1' => [
+
+            'repo_path' => '',
+            'remote' => 'origin',
+            'maintenance_mode' => true,
+            'fire_event' => true,
+            'secret' => false,
+            'secret_type' => 'plain',
+            'secret_header' => 'X-Gitlab-Token',
+            'secret_key' => '',
+            'commands' => [
+            ],
+        ],
+        */
+    ]
 ];

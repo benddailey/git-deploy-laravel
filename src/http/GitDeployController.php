@@ -43,6 +43,8 @@ class GitDeployController extends Controller
 
         // Collect the posted data
         $postdata = json_decode($request->getContent(), true);
+        $log->addInfo($request->getContent());
+        $log->addInfo($request);
         if (empty($postdata)) {
             $log->addError('Web hook data does not look valid');
             return Response::json([
@@ -51,8 +53,10 @@ class GitDeployController extends Controller
                 ], 400);
         }
 
+        $config_base='gitdeploy.self.';
+
         // Check the config's directory
-        $repo_dir = config('gitdeploy.repo_path');
+        $repo_dir = config($config_base.'repo_path');
         if (!empty($repo_dir) && !file_exists($repo_dir.'/.git/config')) {
             $log->addError('Invalid repo path in config');
             return Response::json([
@@ -87,8 +91,8 @@ class GitDeployController extends Controller
         }
 
         // Check signatures
-        if (!empty(config('gitdeploy.secret'))) {
-            $header = config('gitdeploy.secret_header');
+        if (!empty(config($config_base.'secret'))) {
+            $header = config($config_base.'secret_header');
             $header_data = $request->header($header);
 
             /**
@@ -105,7 +109,7 @@ class GitDeployController extends Controller
             /**
              * Sanity check for key
              */
-            if (empty(config('gitdeploy.secret_key'))) {
+            if (empty(config($config_base.'secret_key'))) {
                 $log->addError('Secret was set to true but no secret_key specified in config');
                 return Response::json([
                     'success' => false,
@@ -116,8 +120,8 @@ class GitDeployController extends Controller
             /**
              * Check plain secrets (Gitlab)
              */
-            if (config('gitdeploy.secret_type') == 'plain') {
-                if ($header_data !== config('gitdeploy.secret_key')) {
+            if (config($config_base.'secret_type') == 'plain') {
+                if ($header_data !== config($config_base.'secret_key')) {
                     $log->addError('Secret did not match');
                     return Response::json([
                         'success' => false,
@@ -129,8 +133,8 @@ class GitDeployController extends Controller
             /**
              * Check hmac secrets (Github)
              */
-            elseif (config('gitdeploy.secret_type') == 'mac') {
-                if (!hash_equals('sha1=' . hash_hmac('sha1', $request->getContent(), config('gitdeploy.secret')))) {
+            elseif (config($config_base.'secret_type') == 'mac') {
+                if (!hash_equals('sha1=' . hash_hmac('sha1', $request->getContent(), config($config_base.'secret')))) {
                     $log->addError('Secret did not match');
                     return Response::json([
                         'success' => false,
@@ -184,7 +188,7 @@ class GitDeployController extends Controller
         }
 
         // At this point we're happy everything is OK to pull, lets put Laravel into Maintenance mode.
-        if (!empty(config('gitdeploy.maintenance_mode'))) {
+        if (!empty(config($config_base.'maintenance_mode'))) {
             Log::info('Gitdeploy: putting site into maintenance mode');
             Artisan::call('down');
         }
@@ -231,8 +235,8 @@ class GitDeployController extends Controller
         $log->info('Gitdeploy: ' . $cmd . 'output: ' . print_r($output, true));
 
         //Lets see if we have commands to run and run them
-        if (!empty(config('gitdeploy.commands'))) {
-            $commands = config('gitdeploy.commands');
+        if (!empty(config($config_base.'commands'))) {
+            $commands = config($config_base.'commands');
             $command_results = array();
             foreach ($commands as $command) {
                 $output = array();
@@ -256,18 +260,18 @@ class GitDeployController extends Controller
         }
 
         // Put site back up and end maintenance mode
-        if (!empty(config('gitdeploy.maintenance_mode'))) {
+        if (!empty(config($config_base.'maintenance_mode'))) {
             Artisan::call('up');
             Log::info('Gitdeploy: taking site out of maintenance mode');
         }
 
         // Fire Event that git were deployed
-        if (!empty(config('gitdeploy.fire_event'))) {
+        if (!empty(config($config_base.'fire_event'))) {
             event(new GitDeployed($postdata['commits']));
             Log::debug('Gitdeploy: Event GitDeployed fired');
         }
 
-        if (!empty(config('gitdeploy.email_recipients'))) {
+        if (!empty(config($config_base.'email_recipients'))) {
 
             // Humanise the commit log
             foreach ($postdata['commits'] as $commit_key => $commit) {
@@ -295,16 +299,16 @@ class GitDeployController extends Controller
             // Use package's own sender or the project default?
             $addressdata['sender_name'] = config('mail.from.name');
             $addressdata['sender_address'] = config('mail.from.address');
-            if (config('gitdeploy.email_sender.address') !== null) {
-                $addressdata['sender_name'] = config('gitdeploy.email_sender.name');
-                $addressdata['sender_address'] = config('gitdeploy.email_sender.address');
+            if (config($config_base.'email_sender.address') !== null) {
+                $addressdata['sender_name'] = config($config_base.'email_sender.name');
+                $addressdata['sender_address'] = config($config_base.'email_sender.address');
             }
 
             // Recipients
-            $addressdata['recipients'] = config('gitdeploy.email_recipients');
+            $addressdata['recipients'] = config($config_base.'email_recipients');
 
             // Template
-            $emailTemplate = config('gitdeploy.email_template', 'gitdeploy::email');
+            $emailTemplate = config($config_base.'email_template', 'gitdeploy::email');
 
             // Todo: Put Mail send into queue to improve performance
             \Mail::send($emailTemplate, [ 'server' => $server_response, 'git' => $postdata, 'command_results' => $command_results ], function ($message) use ($postdata, $addressdata) {
