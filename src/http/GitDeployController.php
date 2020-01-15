@@ -43,8 +43,6 @@ class GitDeployController extends Controller
 
         // Collect the posted data
         $postdata = json_decode($request->getContent(), true);
-        $log->info($request->getContent());
-        $log->info($request);
         if (empty($postdata)) {
             $log->addError('Web hook data does not look valid');
             return Response::json([
