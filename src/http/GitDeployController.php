@@ -130,8 +130,9 @@ class GitDeployController extends Controller
         // Need to copy current directory to new hashed directory then reset repo_path
         if(basename($repo_path) === 'current'){
             $new_repo_path = dirname($repo_path) . '/' . $postdata['after'];
+            // Slash on current required to copy contents and not symlink
             $cmd = 'cp -r '
-                . escapeshellarg($repo_path)
+                . escapeshellarg($repo_path) . '/'
                 . ' '
                 . escapeshellarg($new_repo_path);
             exec($cmd);
