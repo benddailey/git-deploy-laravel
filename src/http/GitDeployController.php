@@ -332,7 +332,7 @@ class GitDeployController extends Controller
             Log::debug('Gitdeploy: Event GitDeployed fired');
         }
 
-        if (!empty(config($config_base . 'email_recipients'))) {
+        if (!empty(config('gitdeploy.email_recipients'))) {
 
             // Humanise the commit log
             foreach ($postdata['commits'] as $commit_key => $commit) {
@@ -360,16 +360,16 @@ class GitDeployController extends Controller
             // Use package's own sender or the project default?
             $addressdata['sender_name'] = config('mail.from.name');
             $addressdata['sender_address'] = config('mail.from.address');
-            if (config($config_base . 'email_sender.address') !== null) {
-                $addressdata['sender_name'] = config($config_base . 'email_sender.name');
-                $addressdata['sender_address'] = config($config_base . 'email_sender.address');
+            if (config('gitdeploy.email_sender.address') !== null) {
+                $addressdata['sender_name'] = config('gitdeploy.email_sender.name');
+                $addressdata['sender_address'] = config('gitdeploy.email_sender.address');
             }
 
             // Recipients
-            $addressdata['recipients'] = config($config_base . 'email_recipients');
+            $addressdata['recipients'] = config('gitdeploy.email_recipients');
 
             // Template
-            $emailTemplate = config($config_base . 'email_template', 'gitdeploy::email');
+            $emailTemplate = config('gitdeploy.email_template', 'gitdeploy::email');
 
             // Todo: Put Mail send into queue to improve performance
             \Mail::send($emailTemplate, [ 'server' => $server_response, 'git' => $postdata, 'command_results' => $command_results ], function ($message) use ($postdata, $addressdata) {
