@@ -30,7 +30,7 @@ return [
     |
     */
 
-    'email_sender' => ['address' => null, 'name' => null],
+    'email_sender' => ['name' => null, 'address' => null],
 
     /*
     |--------------------------------------------------------------------------
