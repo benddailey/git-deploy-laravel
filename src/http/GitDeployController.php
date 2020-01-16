@@ -354,7 +354,21 @@ class GitDeployController extends Controller
 
             // Standardise formats for Gitlab / Github payload differences
             if (isset($postdata['pusher']) && !empty($postdata['pusher'])) {
-                $postdata['user_name'] = $postdata['pusher']['name'];
+                if(isset($postdata['pusher']['name'])){
+                    $postdata['user_name'] = $postdata['pusher']['name'];
+                }
+                elseif(isset($postdata['pusher']['full_name'])){
+                    $postdata['user_name'] = $postdata['pusher']['full_name'];
+                }
+                elseif(isset($postdata['pusher']['username'])){
+                    $postdata['user_name'] = $postdata['pusher']['username'];
+                }
+                elseif(isset($postdata['pusher']['login'])){
+                    $postdata['user_name'] = $postdata['pusher']['login'];
+                }
+                else {
+                    $postdata['user_name'] = 'Unknown';
+                }
                 $postdata['user_email'] = $postdata['pusher']['email'];
             }
             
