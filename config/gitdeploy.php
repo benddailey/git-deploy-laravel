@@ -220,7 +220,6 @@ return [
             |     'composer install --no-interaction --no-dev --optimize-autoloader',
             |     'npm install --production',
             |     'npm run production',
-            |     'php artisan optimize',
             |     'php artisan config:cache',
             |     'php artisan route:cache',
             |     'php artisan view:cache',
