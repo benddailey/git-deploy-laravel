@@ -126,6 +126,17 @@ class GitDeployController extends Controller
                 'message' => 'Could not determine the repo path',
             ], 500);
         }
+        // If last folder of the repo_path is named "current" assuming zero downtime deploy
+        // Need to copy current directory to new hashed directory then reset repo_path
+        if(basename($repo_path) === 'current'){
+            $new_repo_path = dirname($repo_path) . '/' . $postdata['after'];
+            $cmd = 'cp -r '
+                . escapeshellarg($repo_path)
+                . ' '
+                . escapeshellarg($new_repo_path);
+            exec($cmd);
+            $repo_path = $new_repo_path;
+        }
 
         // Determine the repository name
         $repo_name = config($config_base . 'repo_name');
@@ -204,7 +215,8 @@ class GitDeployController extends Controller
              * Check hmac secrets (Github)
              */
             elseif (config($config_base . 'secret_type') == 'mac') {
-                if (!hash_equals('sha1=' . hash_hmac('sha1', $request->getContent(), config($config_base . 'secret')))) {
+                // @TODO figure out how this should work, but for now it fixes the function call
+                if (!hash_equals('sha1=abcdefghijklmnopqrst','sha1=' . hash_hmac('sha1', $request->getContent(), config($config_base . 'secret')))) {
                     $log->addError('Secret did not match');
                     return Response::json([
                         'success' => false,
