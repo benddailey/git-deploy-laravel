@@ -300,6 +300,11 @@ class GitDeployController extends Controller
         if (!empty(config($config_base . 'commands'))) {
             $commands = config($config_base . 'commands');
             $command_results = array();
+            //Overload ENV for following commands
+            Artisan::call('config:clear');
+            //This will need changed for Laravel >5.7
+            // https://medium.com/@sirajul.anik/laravel-lumen-overload-existing-environment-variables-949eaa354a86
+            (new Dotenv($repo_path))->overload();
             foreach ($commands as $command) {
                 $output = array();
                 $returnCode = '';
@@ -319,6 +324,10 @@ class GitDeployController extends Controller
                 $log->info('Gitdeploy: ' . $cmd . 'finished with code: ' . $returnCode);
                 $log->info('Gitdeploy: ' . $cmd . 'output: ' . print_r($output, true));
             }
+            //Reset ENV for local commands
+            //This will need changed for Laravel >5.7
+            (new Dotenv(base_path()))->overload();
+            Artisan::call('config:cache');
         }
 
         // Put site back up and end maintenance mode
