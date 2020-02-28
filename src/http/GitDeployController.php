@@ -306,7 +306,7 @@ class GitDeployController extends Controller
                 $cmd = escapeshellcmd('cd')
                         . ' '
                         . escapeshellarg($repo_path)
-                        . ' ; '
+                        . ' && '
                         . escapeshellcmd($command)
                         . ' 2>&1';
                 $log->info('Gitdeploy: Running post pull command: '.$cmd);
