@@ -14,6 +14,7 @@ use Log;
 use Event;
 
 use Orphans\GitDeploy\Events\GitDeployed;
+use Dotenv\Dotenv;
 
 class GitDeployController extends Controller
 {
