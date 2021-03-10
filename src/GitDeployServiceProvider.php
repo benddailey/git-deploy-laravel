@@ -18,7 +18,6 @@ class GitDeployServiceProvider extends ServiceProvider
         ], 'config');
         $this->loadRoutesFrom(__dir__ . '/http/routes.php');
         $this->loadViewsFrom(__dir__ . '/views', 'gitdeploy');
-
     }
 
     /**

@@ -55,10 +55,10 @@ class GitDeployController extends Controller
         // Get repository name this webhook is for if push request
         if (isset($postdata['repository']['name'])) {
             $pushed_repo_name = trim($postdata['repository']['name']);
-            // Get repository name this webhook is for if pull request
+        // Get repository name this webhook is for if pull request
         } elseif (isset($postdata['base']['repository']['name'])) {
             $pushed_repo_name = trim($postdata['base']['repository']['name']);
-            // Get repository name fails
+        // Get repository name fails
         } else {
             $log->addWarning('Could not determine repository name for action');
             return Response::json([
@@ -71,11 +71,11 @@ class GitDeployController extends Controller
         if (isset($postdata['ref'])) {
             $pushed_branch = explode('/', $postdata['ref']);
             $pushed_branch = trim($pushed_branch[2]);
-            // Get branch this webhook is for if pull request
+        // Get branch this webhook is for if pull request
         } elseif (isset($postdata['base']['ref'])) {
             $pushed_branch = explode('/', $postdata['base']['ref']);
             $pushed_branch = trim($pushed_branch[2]);
-            // Get branch fails
+        // Get branch fails
         } else {
             $log->addWarning('Could not determine refs for action');
             return Response::json([
@@ -86,8 +86,8 @@ class GitDeployController extends Controller
 
         $config_base='gitdeploy.projects.self.';
 
-        foreach(config('gitdeploy.projects') as $key => $project){
-            if($project['repo_name'] == $pushed_repo_name && $project['branch'] == $pushed_branch){
+        foreach (config('gitdeploy.projects') as $key => $project) {
+            if ($project['repo_name'] == $pushed_repo_name && $project['branch'] == $pushed_branch) {
                 $config_base='gitdeploy.projects.' . $key . '.';
                 break;
             }
@@ -129,7 +129,7 @@ class GitDeployController extends Controller
         }
         // If last folder of the repo_path is named "current" assuming zero downtime deploy
         // Need to copy current directory to new hashed directory then reset repo_path
-        if(basename($repo_path) === 'current'){
+        if (basename($repo_path) === 'current') {
             $new_repo_path = dirname($repo_path) . '/' . $postdata['after'];
             // Slash on current required to copy contents and not symlink
             $cmd = 'cp -r '
@@ -156,7 +156,7 @@ class GitDeployController extends Controller
 
         // Get current branch this repository is on
         $branch = config($config_base . 'branch');
-        if (empty($branch)){
+        if (empty($branch)) {
             $cmd = escapeshellcmd($git_path)
                 . ' --git-dir=' . escapeshellarg($repo_path . '/.git')
                 . ' --work-tree=' . escapeshellarg($repo_path)
@@ -218,7 +218,7 @@ class GitDeployController extends Controller
              */
             elseif (config($config_base . 'secret_type') == 'mac') {
                 // @TODO figure out how this should work, but for now it fixes the function call
-                if (!hash_equals('sha1=abcdefghijklmnopqrst','sha1=' . hash_hmac('sha1', $request->getContent(), config($config_base . 'secret')))) {
+                if (!hash_equals('sha1=abcdefghijklmnopqrst', 'sha1=' . hash_hmac('sha1', $request->getContent(), config($config_base . 'secret')))) {
                     $log->addError('Secret did not match');
                     return Response::json([
                         'success' => false,
@@ -364,19 +364,15 @@ class GitDeployController extends Controller
 
             // Standardise formats for Gitlab / Github payload differences
             if (isset($postdata['pusher']) && !empty($postdata['pusher'])) {
-                if(isset($postdata['pusher']['name'])){
+                if (isset($postdata['pusher']['name'])) {
                     $postdata['user_name'] = $postdata['pusher']['name'];
-                }
-                elseif(isset($postdata['pusher']['full_name'])){
+                } elseif (isset($postdata['pusher']['full_name'])) {
                     $postdata['user_name'] = $postdata['pusher']['full_name'];
-                }
-                elseif(isset($postdata['pusher']['username'])){
+                } elseif (isset($postdata['pusher']['username'])) {
                     $postdata['user_name'] = $postdata['pusher']['username'];
-                }
-                elseif(isset($postdata['pusher']['login'])){
+                } elseif (isset($postdata['pusher']['login'])) {
                     $postdata['user_name'] = $postdata['pusher']['login'];
-                }
-                else {
+                } else {
                     $postdata['user_name'] = 'Unknown';
                 }
                 $postdata['user_email'] = $postdata['pusher']['email'];
