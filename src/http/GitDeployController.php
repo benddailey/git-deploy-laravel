@@ -36,9 +36,9 @@ class GitDeployController extends Controller
             if (!in_array($remote_ip, $allowed_sources)) {
                 $log->addError('Request must come from an approved IP');
                 return Response::json([
-                            'success' => false,
-                            'message' => 'Request must come from an approved IP',
-                        ], 401);
+                    'success' => false,
+                    'message' => 'Request must come from an approved IP',
+                ], 401);
             }
         }
 
@@ -47,9 +47,9 @@ class GitDeployController extends Controller
         if (empty($postdata)) {
             $log->addError('Web hook data does not look valid');
             return Response::json([
-                        'success' => false,
-                        'message' => 'Web hook data does not look valid',
-                ], 400);
+                'success' => false,
+                'message' => 'Web hook data does not look valid',
+            ], 400);
         }
 
         // Get repository name this webhook is for if push request
@@ -84,18 +84,18 @@ class GitDeployController extends Controller
             ], 422);
         }
 
-        $config_base='gitdeploy.projects.self.';
+        $config_base = 'gitdeploy.projects.self.';
 
-        foreach(config('gitdeploy.projects') as $key => $project){
-            if($project['repo_name'] == $pushed_repo_name && $project['branch'] == $pushed_branch){
-                $config_base='gitdeploy.projects.' . $key . '.';
+        foreach (config('gitdeploy.projects') as $key => $project) {
+            if ($project['repo_name'] == $pushed_repo_name && $project['branch'] == $pushed_branch) {
+                $config_base = 'gitdeploy.projects.' . $key . '.';
                 break;
             }
         }
 
         // Check the config's directory
         $repo_path = config($config_base . 'repo_path');
-        if (!empty($repo_path) && !file_exists($repo_path.'/.git/config')) {
+        if (!empty($repo_path) && !file_exists($repo_path . '/.git/config')) {
             $log->addError('Invalid repo path in config');
             return Response::json([
                 'success' => false,
@@ -109,18 +109,18 @@ class GitDeployController extends Controller
             $repo_path = __DIR__;
             do {
                 $repo_path = dirname($repo_path);
-            } while ($repo_path !== '/' && !file_exists($repo_path.'/.env'));
+            } while ($repo_path !== '/' && !file_exists($repo_path . '/.env'));
         }
 
         // This is not necessarily the repo's root so go up more paths if necessary
         if ($repo_path !== '/') {
-            while ($repo_path !== '/' && !file_exists($repo_path.'/.git/config')) {
+            while ($repo_path !== '/' && !file_exists($repo_path . '/.git/config')) {
                 $repo_path = dirname($repo_path);
             }
         }
 
         // So, do we have something valid?
-        if ($repo_path === '/' || !file_exists($repo_path.'/.git/config')) {
+        if ($repo_path === '/' || !file_exists($repo_path . '/.git/config')) {
             $log->addError('Could not determine the repo path');
             return Response::json([
                 'success' => false,
@@ -129,7 +129,8 @@ class GitDeployController extends Controller
         }
         // If last folder of the repo_path is named "current" assuming zero downtime deploy
         // Need to copy current directory to new hashed directory then reset repo_path
-        if(basename($repo_path) === 'current'){
+        $new_repo_path = false;
+        if (basename($repo_path) === 'current') {
             $new_repo_path = dirname($repo_path) . '/' . $postdata['after'];
             // Slash on current required to copy contents and not symlink
             $cmd = 'cp -r '
@@ -156,7 +157,7 @@ class GitDeployController extends Controller
 
         // Get current branch this repository is on
         $branch = config($config_base . 'branch');
-        if (empty($branch)){
+        if (empty($branch)) {
             $cmd = escapeshellcmd($git_path)
                 . ' --git-dir=' . escapeshellarg($repo_path . '/.git')
                 . ' --work-tree=' . escapeshellarg($repo_path)
@@ -218,7 +219,7 @@ class GitDeployController extends Controller
              */
             elseif (config($config_base . 'secret_type') == 'mac') {
                 // @TODO figure out how this should work, but for now it fixes the function call
-                if (!hash_equals('sha1=abcdefghijklmnopqrst','sha1=' . hash_hmac('sha1', $request->getContent(), config($config_base . 'secret')))) {
+                if (!hash_equals('sha1=abcdefghijklmnopqrst', 'sha1=' . hash_hmac('sha1', $request->getContent(), config($config_base . 'secret')))) {
                     $log->addError('Secret did not match');
                     return Response::json([
                         'success' => false,
@@ -256,9 +257,9 @@ class GitDeployController extends Controller
             Artisan::call('down');
         }
         //Get PATH
-        $path=array();
+        $path = array();
         exec('echo $PATH', $path);
-        $path=$path[0];
+        $path = $path[0];
 
         //Log PATH before changing it
         $log->info('Gitdeploy: PATH before: ' . $path);
@@ -267,9 +268,9 @@ class GitDeployController extends Controller
         putenv('PATH=' . $path . ':/usr/local/bin:/usr/bin');
 
         //Check PATH after setting and log it
-        $path=array();
+        $path = array();
         exec('echo $PATH', $path);
-        $path=$path[0];
+        $path = $path[0];
         $log->info('Gitdeploy: PATH after: ' . $path);
 
         // git pull
@@ -279,12 +280,12 @@ class GitDeployController extends Controller
         $returnCode = '';
 
         $cmd = escapeshellcmd($git_path)
-                . ' --git-dir='
-                . escapeshellarg($repo_path . '/.git')
-                . ' --work-tree=' . escapeshellarg($repo_path)
-                . ' pull ' . escapeshellarg($git_remote)
-                . ' '
-                . escapeshellarg($branch);
+            . ' --git-dir='
+            . escapeshellarg($repo_path . '/.git')
+            . ' --work-tree=' . escapeshellarg($repo_path)
+            . ' pull ' . escapeshellarg($git_remote)
+            . ' '
+            . escapeshellarg($branch);
 
         exec($cmd, $output, $returnCode);
 
@@ -310,12 +311,12 @@ class GitDeployController extends Controller
                 $output = array();
                 $returnCode = '';
                 $cmd = escapeshellcmd('cd')
-                        . ' '
-                        . escapeshellarg($repo_path)
-                        . ' && '
-                        . escapeshellcmd($command)
-                        . ' 2>&1';
-                $log->info('Gitdeploy: Running post pull command: '.$cmd);
+                    . ' '
+                    . escapeshellarg($repo_path)
+                    . ' && '
+                    . escapeshellcmd($command)
+                    . ' 2>&1';
+                $log->info('Gitdeploy: Running post pull command: ' . $cmd);
                 exec($cmd, $output, $returnCode);
                 array_push($command_results, [
                     'cmd' => $cmd,
@@ -335,6 +336,24 @@ class GitDeployController extends Controller
         if (!empty(config($config_base . 'maintenance_mode'))) {
             Artisan::call('up');
             Log::info('Gitdeploy: taking site out of maintenance mode');
+        }
+
+        // If new_repo_path set assuming zero downtime deploy
+        if ($new_repo_path) {
+            //Remove current symlink
+            $cmd = 'cd '
+                . escapeshellarg($repo_path) . '/../'
+                . '&& rm current';
+            exec($cmd);
+            $new_build = basename($repo_path);
+
+            //Symlink current to the new build
+            $cmd = 'cd '
+                . escapeshellarg($repo_path) . '/../'
+                . '&& ln -s '
+                . escapeshellarg($new_build)
+                . 'current';
+            exec($cmd);
         }
 
         // Fire Event that git were deployed
@@ -364,24 +383,20 @@ class GitDeployController extends Controller
 
             // Standardise formats for Gitlab / Github payload differences
             if (isset($postdata['pusher']) && !empty($postdata['pusher'])) {
-                if(isset($postdata['pusher']['name'])){
+                if (isset($postdata['pusher']['name'])) {
                     $postdata['user_name'] = $postdata['pusher']['name'];
-                }
-                elseif(isset($postdata['pusher']['full_name'])){
+                } elseif (isset($postdata['pusher']['full_name'])) {
                     $postdata['user_name'] = $postdata['pusher']['full_name'];
-                }
-                elseif(isset($postdata['pusher']['username'])){
+                } elseif (isset($postdata['pusher']['username'])) {
                     $postdata['user_name'] = $postdata['pusher']['username'];
-                }
-                elseif(isset($postdata['pusher']['login'])){
+                } elseif (isset($postdata['pusher']['login'])) {
                     $postdata['user_name'] = $postdata['pusher']['login'];
-                }
-                else {
+                } else {
                     $postdata['user_name'] = 'Unknown';
                 }
                 $postdata['user_email'] = $postdata['pusher']['email'];
             }
-            
+
             // Use package's own sender or the project default?
             $addressdata['sender_name'] = config('mail.from.name');
             $addressdata['sender_address'] = config('mail.from.address');
@@ -397,7 +412,7 @@ class GitDeployController extends Controller
             $emailTemplate = config('gitdeploy.email_template', 'gitdeploy::email');
 
             // Todo: Put Mail send into queue to improve performance
-            \Mail::send($emailTemplate, [ 'server' => $server_response, 'git' => $postdata, 'command_results' => $command_results ], function ($message) use ($postdata, $addressdata) {
+            \Mail::send($emailTemplate, ['server' => $server_response, 'git' => $postdata, 'command_results' => $command_results], function ($message) use ($postdata, $addressdata) {
                 $message->from($addressdata['sender_address'], $addressdata['sender_name']);
                 foreach ($addressdata['recipients'] as $recipient) {
                     $message->to($recipient['address'], $recipient['name']);
