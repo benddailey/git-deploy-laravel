@@ -20,5 +20,4 @@ class GitDeployed
     {
         $this->commits = $commits;
     }
-
 }

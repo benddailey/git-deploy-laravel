@@ -306,7 +306,8 @@ class GitDeployController extends Controller
             Artisan::call('config:clear');
             //This will need changed for Laravel >5.7
             // https://medium.com/@sirajul.anik/laravel-lumen-overload-existing-environment-variables-949eaa354a86
-            (new Dotenv($repo_path))->overload();
+            // (new Dotenv($repo_path))->overload();
+            (Dotenv::create($repo_path))->overload();
             foreach ($commands as $command) {
                 $output = array();
                 $returnCode = '';
@@ -328,7 +329,8 @@ class GitDeployController extends Controller
             }
             //Reset ENV for local commands
             //This will need changed for Laravel >5.7
-            (new Dotenv(base_path()))->overload();
+            // (new Dotenv(base_path()))->overload();
+            (Dotenv::create(base_path()))->overload();
             Artisan::call('config:cache');
         }
 
