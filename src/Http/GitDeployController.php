@@ -354,7 +354,7 @@ class GitDeployController extends Controller
                 . escapeshellarg($repo_path) . '/../'
                 . '&& ln -s '
                 . escapeshellarg($new_build)
-                . 'current';
+                . ' current';
             exec($cmd);
         }
 
